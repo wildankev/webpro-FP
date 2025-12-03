@@ -3,6 +3,8 @@
  * myITS Merchandise - Shipping API (RajaOngkir Integration)
  * 
  * Handles shipping cost calculation using RajaOngkir API.
+ * Supports both JSON file storage and MySQL database for caching.
+ * 
  * Provides endpoints for:
  * - Getting list of provinces
  * - Getting list of cities
@@ -26,8 +28,13 @@ if (!defined('MYITS_BACKEND')) {
     exit('Direct access not allowed');
 }
 
+// Load ShippingDatabase if MySQL is enabled
+if (DB_TYPE === 'mysql') {
+    require_once __DIR__ . '/../includes/ShippingDatabase.php';
+}
+
 // ============================================
-// Cache File Paths
+// Cache File Paths (for JSON storage fallback)
 // ============================================
 
 /**
@@ -175,6 +182,7 @@ function saveToCache(string $cacheFile, array $data): bool {
 
 /**
  * Get all provinces
+ * Supports both MySQL database and JSON file cache
  * 
  * Output:
  * {
@@ -192,11 +200,56 @@ function saveToCache(string $cacheFile, array $data): bool {
  * @return array Provinces data
  */
 function getProvinces(bool $forceRefresh = false): array {
-    // Try to get from cache first
+    // Try MySQL database first if enabled
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        if (!$forceRefresh && ShippingDatabase::hasProvinces() && !ShippingDatabase::isProvincesStale()) {
+            return [
+                'success' => true,
+                'data' => ShippingDatabase::getProvinces(),
+                'cached' => true,
+                'source' => 'mysql'
+            ];
+        }
+        
+        // Fetch from API and store in database
+        $response = rajaOngkirRequest('province');
+        
+        if (!$response['success']) {
+            // Try to return stale data from database if API fails
+            if (ShippingDatabase::hasProvinces()) {
+                return [
+                    'success' => true,
+                    'data' => ShippingDatabase::getProvinces(),
+                    'cached' => true,
+                    'stale' => true,
+                    'source' => 'mysql'
+                ];
+            }
+            return $response;
+        }
+        
+        // Store in database
+        try {
+            ShippingDatabase::storeProvinces($response['data']);
+        } catch (Exception $e) {
+            if (DEBUG_MODE) {
+                error_log('ShippingDatabase error: ' . $e->getMessage());
+            }
+        }
+        
+        return [
+            'success' => true,
+            'data' => $response['data'],
+            'cached' => false,
+            'source' => 'api'
+        ];
+    }
+    
+    // Fall back to JSON cache
     if (!$forceRefresh) {
         $cached = getCachedData(PROVINCES_CACHE_FILE);
         if ($cached !== null) {
-            return ['success' => true, 'data' => $cached, 'cached' => true];
+            return ['success' => true, 'data' => $cached, 'cached' => true, 'source' => 'json'];
         }
     }
     
@@ -213,12 +266,14 @@ function getProvinces(bool $forceRefresh = false): array {
     return [
         'success' => true,
         'data' => $response['data'],
-        'cached' => false
+        'cached' => false,
+        'source' => 'api'
     ];
 }
 
 /**
  * Get cities, optionally filtered by province
+ * Supports both MySQL database and JSON file cache
  * 
  * Input (optional):
  * - province_id: Filter cities by province ID
@@ -244,11 +299,72 @@ function getProvinces(bool $forceRefresh = false): array {
  * @return array Cities data
  */
 function getCities(?int $provinceId = null, bool $forceRefresh = false): array {
-    // For all cities, try cache first
+    // Try MySQL database first if enabled
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        if (!$forceRefresh && ShippingDatabase::hasCities() && !ShippingDatabase::isCitiesStale()) {
+            return [
+                'success' => true,
+                'data' => ShippingDatabase::getCities($provinceId),
+                'cached' => true,
+                'source' => 'mysql'
+            ];
+        }
+        
+        // Fetch all cities from API (province filtering done locally for efficiency)
+        $endpoint = 'city';
+        if ($provinceId !== null && !ShippingDatabase::hasCities()) {
+            // If we don't have any cities yet, we can filter at API level
+            $endpoint .= '?province=' . $provinceId;
+        }
+        
+        $response = rajaOngkirRequest($endpoint);
+        
+        if (!$response['success']) {
+            // Try to return stale data from database if API fails
+            if (ShippingDatabase::hasCities()) {
+                return [
+                    'success' => true,
+                    'data' => ShippingDatabase::getCities($provinceId),
+                    'cached' => true,
+                    'stale' => true,
+                    'source' => 'mysql'
+                ];
+            }
+            return $response;
+        }
+        
+        // Store in database (only store all cities, not filtered results)
+        if ($provinceId === null || !ShippingDatabase::hasCities()) {
+            try {
+                ShippingDatabase::storeCities($response['data']);
+            } catch (Exception $e) {
+                if (DEBUG_MODE) {
+                    error_log('ShippingDatabase error: ' . $e->getMessage());
+                }
+            }
+        }
+        
+        // If province filter was applied, filter the results
+        if ($provinceId !== null) {
+            $filtered = array_filter($response['data'], function($city) use ($provinceId) {
+                return (int) $city['province_id'] === $provinceId;
+            });
+            $response['data'] = array_values($filtered);
+        }
+        
+        return [
+            'success' => true,
+            'data' => $response['data'],
+            'cached' => false,
+            'source' => 'api'
+        ];
+    }
+    
+    // Fall back to JSON cache
     if ($provinceId === null && !$forceRefresh) {
         $cached = getCachedData(CITIES_CACHE_FILE);
         if ($cached !== null) {
-            return ['success' => true, 'data' => $cached, 'cached' => true];
+            return ['success' => true, 'data' => $cached, 'cached' => true, 'source' => 'json'];
         }
     }
     
@@ -273,17 +389,25 @@ function getCities(?int $provinceId = null, bool $forceRefresh = false): array {
     return [
         'success' => true,
         'data' => $response['data'],
-        'cached' => false
+        'cached' => false,
+        'source' => 'api'
     ];
 }
 
 /**
  * Get a single city by ID
+ * Supports both MySQL database and JSON cache
  * 
  * @param int $cityId City ID
  * @return array|null City data or null if not found
  */
 function getCityById(int $cityId): ?array {
+    // Try MySQL database first if enabled
+    if (DB_TYPE === 'mysql' && isMySQLEnabled() && ShippingDatabase::hasCities()) {
+        return ShippingDatabase::getCityById($cityId);
+    }
+    
+    // Fall back to JSON method
     $cities = getCities();
     
     if (!$cities['success'] || empty($cities['data'])) {
@@ -301,6 +425,7 @@ function getCityById(int $cityId): ?array {
 
 /**
  * Calculate shipping cost
+ * Supports both MySQL database caching and RajaOngkir API
  * 
  * Expected Input:
  * {
@@ -389,6 +514,29 @@ function calculateShippingCost(array $data): array {
         ];
     }
     
+    // Try MySQL cache first if enabled
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        $cached = ShippingDatabase::getCachedShippingCost($origin, $destination, $weight, $courier);
+        
+        if ($cached !== null) {
+            // Get origin and destination city details
+            $originCity = getCityById($origin);
+            $destinationCity = getCityById($destination);
+            
+            return [
+                'success' => true,
+                'data' => [
+                    'origin' => $originCity ?? ['city_id' => $origin],
+                    'destination' => $destinationCity ?? ['city_id' => $destination],
+                    'weight' => $weight,
+                    'courier' => $courier,
+                    'results' => $cached,
+                    'cached' => true
+                ]
+            ];
+        }
+    }
+    
     // Call RajaOngkir Cost API
     $response = rajaOngkirRequest('cost', 'POST', [
         'origin' => $origin,
@@ -399,6 +547,25 @@ function calculateShippingCost(array $data): array {
     
     if (!$response['success']) {
         return $response;
+    }
+    
+    // Store in MySQL cache if enabled
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        try {
+            if (!empty($response['data'][0]['costs'])) {
+                ShippingDatabase::storeShippingCalculations(
+                    $origin,
+                    $destination,
+                    $weight,
+                    $courier,
+                    $response['data'][0]['costs']
+                );
+            }
+        } catch (Exception $e) {
+            if (DEBUG_MODE) {
+                error_log('ShippingDatabase cache error: ' . $e->getMessage());
+            }
+        }
     }
     
     // Get origin and destination city details
@@ -412,7 +579,8 @@ function calculateShippingCost(array $data): array {
             'destination' => $destinationCity ?? ['city_id' => $destination],
             'weight' => $weight,
             'courier' => $courier,
-            'results' => $response['data']
+            'results' => $response['data'],
+            'cached' => false
         ]
     ];
 }
