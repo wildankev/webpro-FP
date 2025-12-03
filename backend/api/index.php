@@ -23,6 +23,21 @@
  *   POST /api/auth/login        - Admin login
  *   POST /api/auth/logout       - Admin logout
  *   GET  /api/auth/check        - Check auth status
+ * 
+ *   POST /api/payment/create           - Create payment transaction (Midtrans)
+ *   GET  /api/payment/status/{order_id} - Get transaction status
+ *   POST /api/payment/webhook          - Handle Midtrans webhook notification
+ *   GET  /api/payment/orders           - Get all orders
+ *   GET  /api/payment/order/{order_id} - Get single order
+ *   GET  /api/payment/client-key       - Get Midtrans client key
+ * 
+ *   GET  /api/shipping/provinces       - Get all provinces (RajaOngkir)
+ *   GET  /api/shipping/cities          - Get all cities
+ *   GET  /api/shipping/cities?province={id} - Get cities by province
+ *   POST /api/shipping/cost            - Calculate shipping cost
+ *   POST /api/shipping/cost-all        - Calculate cost for all couriers
+ *   GET  /api/shipping/couriers        - Get available couriers
+ *   GET  /api/shipping/origin          - Get default origin city
  */
 
 // Define backend constant to allow includes
@@ -31,6 +46,7 @@ define('MYITS_BACKEND', true);
 // Load configuration
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/api_keys.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 // Set CORS headers
@@ -104,6 +120,24 @@ try {
         case 'auth':
             require_once __DIR__ . '/auth.php';
             handleAuthRequest($method, $action);
+            break;
+            
+        case 'payment':
+            // Payment API (Midtrans integration)
+            // For payment endpoints, we need to handle order_id in the URL
+            // e.g., /payment/status/{order_id} or /payment/order/{order_id}
+            $orderId = null;
+            if (isset($parts[2]) && !empty($parts[2])) {
+                $orderId = $parts[2];
+            }
+            require_once __DIR__ . '/payment.php';
+            handlePaymentRequest($method, $action, $orderId);
+            break;
+            
+        case 'shipping':
+            // Shipping API (RajaOngkir integration)
+            require_once __DIR__ . '/shipping.php';
+            handleShippingRequest($method, $action);
             break;
             
         case '':

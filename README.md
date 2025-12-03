@@ -61,10 +61,13 @@ php -S localhost:8080
 │   │   ├── index.php       # Main API router
 │   │   ├── products.php    # Products API endpoints
 │   │   ├── cart.php        # Cart API endpoints
-│   │   └── auth.php        # Authentication API endpoints
+│   │   ├── auth.php        # Authentication API endpoints
+│   │   ├── payment.php     # Payment API (Midtrans integration)
+│   │   └── shipping.php    # Shipping API (RajaOngkir integration)
 │   ├── config/
 │   │   ├── config.php      # Application configuration
-│   │   └── database.php    # Database configuration
+│   │   ├── database.php    # Database configuration
+│   │   └── api_keys.php    # External API keys (Midtrans, RajaOngkir)
 │   ├── includes/
 │   │   └── helpers.php     # Helper functions
 │   ├── database/
@@ -118,6 +121,44 @@ Returns API status and version information.
 | POST | `/backend/api/auth/logout` | Admin logout |
 | GET | `/backend/api/auth/check` | Check auth status |
 
+### Payment API (Midtrans Integration)
+
+Integrated with [Midtrans Payment Gateway](https://midtrans.com/) for processing payments.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/backend/api/payment/create` | Create payment transaction (returns Snap token) |
+| GET | `/backend/api/payment/status/{order_id}` | Get transaction status from Midtrans |
+| POST | `/backend/api/payment/webhook` | Handle Midtrans webhook notification |
+| GET | `/backend/api/payment/orders` | Get all orders |
+| GET | `/backend/api/payment/order/{order_id}` | Get single order details |
+| GET | `/backend/api/payment/client-key` | Get Midtrans client key for frontend |
+
+**Payment Configuration:**
+- Configure API keys in `backend/config/api_keys.php`
+- Set `MIDTRANS_SERVER_KEY` and `MIDTRANS_CLIENT_KEY`
+- Toggle `MIDTRANS_IS_PRODUCTION` for live/sandbox environment
+
+### Shipping API (RajaOngkir Integration)
+
+Integrated with [RajaOngkir API](https://rajaongkir.com/) for shipping cost calculation.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/backend/api/shipping/provinces` | Get all provinces |
+| GET | `/backend/api/shipping/cities` | Get all cities |
+| GET | `/backend/api/shipping/cities?province={id}` | Get cities by province |
+| POST | `/backend/api/shipping/cost` | Calculate shipping cost |
+| POST | `/backend/api/shipping/cost-all` | Calculate cost for all couriers |
+| GET | `/backend/api/shipping/couriers` | Get available couriers |
+| GET | `/backend/api/shipping/origin` | Get default origin city |
+
+**Shipping Configuration:**
+- Configure API key in `backend/config/api_keys.php`
+- Set `RAJAONGKIR_API_KEY` from your RajaOngkir account
+- Set `RAJAONGKIR_ACCOUNT_TYPE` ('starter', 'basic', or 'pro')
+- Set `DEFAULT_ORIGIN_CITY` for store location (default: 444 = Surabaya)
+
 ### Example API Requests
 
 **Get all products:**
@@ -139,6 +180,44 @@ curl -X POST http://localhost:8080/backend/api/auth/login \
   -d '{"email": "admin@its.ac.id", "password": "admin"}'
 ```
 
+**Create payment transaction (Midtrans):**
+```bash
+curl -X POST http://localhost:8080/backend/api/payment/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cart_items": [
+      {"id": 1, "name": "ITS Hoodie Navy", "price": 185000, "qty": 1}
+    ],
+    "customer": {
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "08123456789"
+    },
+    "shipping_address": {
+      "address": "Jl. Example No. 123",
+      "city": "Surabaya",
+      "postal_code": "60111"
+    },
+    "shipping_cost": 15000
+  }'
+```
+
+**Calculate shipping cost (RajaOngkir):**
+```bash
+curl -X POST http://localhost:8080/backend/api/shipping/cost \
+  -H "Content-Type: application/json" \
+  -d '{
+    "destination": 501,
+    "weight": 1000,
+    "courier": "jne"
+  }'
+```
+
+**Get available couriers:**
+```bash
+curl http://localhost:8080/backend/api/shipping/couriers
+```
+
 ## Fitur
 
 1. **Hero Section** - Landing page dengan CTA
@@ -153,6 +232,31 @@ curl -X POST http://localhost:8080/backend/api/auth/login \
 8. **Local Storage** - Persist data keranjang dan produk
 9. **Toast Notifications** - Notifikasi untuk aksi user
 10. **Responsive Design** - Mobile-friendly menggunakan Bootstrap grid system
+11. **Payment Gateway** - Integrasi Midtrans untuk pembayaran online
+12. **Shipping Cost** - Kalkulasi ongkir menggunakan RajaOngkir API
+
+## External API Configuration
+
+### Midtrans Payment Gateway
+
+1. Register at [Midtrans Dashboard](https://dashboard.midtrans.com/)
+2. Get your Server Key and Client Key from Settings > Access Keys
+3. Update `backend/config/api_keys.php`:
+   ```php
+   define('MIDTRANS_SERVER_KEY', 'your-server-key');
+   define('MIDTRANS_CLIENT_KEY', 'your-client-key');
+   define('MIDTRANS_IS_PRODUCTION', false); // Set true for production
+   ```
+
+### RajaOngkir Shipping API
+
+1. Register at [RajaOngkir](https://rajaongkir.com/)
+2. Get your API key from the dashboard
+3. Update `backend/config/api_keys.php`:
+   ```php
+   define('RAJAONGKIR_API_KEY', 'your-api-key');
+   define('RAJAONGKIR_ACCOUNT_TYPE', 'starter'); // 'starter', 'basic', or 'pro'
+   ```
 
 ## Branding
 
