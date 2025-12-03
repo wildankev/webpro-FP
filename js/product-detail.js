@@ -5,11 +5,30 @@
 
 /**
  * Get product ID from URL query parameter
- * @returns {string|null} Product ID or null
+ * @returns {number|null} Product ID as integer or null
  */
 function getProductIdFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('id');
+    const id = urlParams.get('id');
+    if (id === null) return null;
+    
+    // Validate and parse as integer
+    const parsedId = parseInt(id, 10);
+    if (isNaN(parsedId) || parsedId < 0) {
+        return null;
+    }
+    return parsedId;
+}
+
+/**
+ * Escape HTML entities in text content
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /**
@@ -20,33 +39,41 @@ function renderProductDetail(product) {
     const container = document.getElementById('productDetailContent');
     if (!container) return;
 
+    // Validate and sanitize product data
+    const productId = parseInt(product.id, 10);
+    const safeName = escapeHtml(product.name);
+    const safeCategory = escapeHtml(product.category);
+    const safeDesc = escapeHtml(product.desc);
+    const safeImage = escapeHtml(product.image);
+    const safeStock = parseInt(product.stock, 10);
+
     // Update page title
-    document.title = `${product.name} - myITS Merchandise`;
+    document.title = `${safeName} - myITS Merchandise`;
 
     container.innerHTML = `
         <div class="row g-4">
             <div class="col-md-6">
                 <div class="bg-dark-card p-3 rounded-4 border border-secondary">
-                    <img src="${product.image}" alt="${product.name}" class="product-detail-img">
+                    <img src="${safeImage}" alt="${safeName}" class="product-detail-img">
                 </div>
             </div>
             <div class="col-md-6">
                 <div class="text-its-blue fw-bold text-uppercase small mb-2 letter-spacing-1">
-                    ${product.category}
+                    ${safeCategory}
                 </div>
                 <h1 class="display-6 fw-bold text-white mb-3">
-                    ${product.name}
+                    ${safeName}
                 </h1>
                 <div class="text-its-cyan fs-3 fw-bold mb-4">
                     ${formatRupiah(product.price)}
                 </div>
                 <p class="text-secondary fs-5 mb-4" style="line-height: 1.7;">
-                    ${product.desc}
+                    ${safeDesc}
                 </p>
                 <div class="product-detail-info-box mb-4">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-muted">Stok Tersedia</span>
-                        <span class="fw-bold text-white">${product.stock} pcs</span>
+                        <span class="fw-bold text-white">${safeStock} pcs</span>
                     </div>
                     <div class="d-flex justify-content-between">
                         <span class="text-muted">Pengiriman</span>
@@ -54,7 +81,7 @@ function renderProductDetail(product) {
                     </div>
                 </div>
                 <button class="btn btn-its-blue btn-lg w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2"
-                        onclick="addToCart(${product.id})">
+                        onclick="addToCart(${productId})">
                     <i class="bi bi-cart-plus fs-5"></i>
                     Tambah ke Keranjang
                 </button>

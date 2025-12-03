@@ -234,23 +234,40 @@ function goBack() {
  * @returns {string} HTML string for product card
  */
 function createProductCardHTML(product) {
+    // Validate product.id is a safe integer
+    const productId = parseInt(product.id, 10);
+    if (isNaN(productId) || productId < 0) {
+        console.error('Invalid product ID:', product.id);
+        return '';
+    }
+    
+    // Escape HTML entities in text content
+    const escapeHtml = (text) => {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    };
+    
+    const safeName = escapeHtml(product.name);
+    const safeCategory = escapeHtml(product.category);
+    
     return `
         <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-            <div class="product-card" onclick="window.location.href='product-detail.html?id=${product.id}'">
+            <div class="product-card" onclick="window.location.href='product-detail.html?id=${productId}'">
                 <div class="position-relative">
-                    <img src="${product.image}" alt="${product.name}" class="product-card-img" loading="lazy">
-                    <span class="stock-badge">Stok: ${product.stock}</span>
+                    <img src="${escapeHtml(product.image)}" alt="${safeName}" class="product-card-img" loading="lazy">
+                    <span class="stock-badge">Stok: ${parseInt(product.stock, 10)}</span>
                 </div>
                 <div class="product-card-body">
-                    <small class="text-muted">${product.category}</small>
-                    <h5 class="text-white fs-6 fw-medium mt-1 mb-1 text-truncate" title="${product.name}">
-                        ${product.name}
+                    <small class="text-muted">${safeCategory}</small>
+                    <h5 class="text-white fs-6 fw-medium mt-1 mb-1 text-truncate" title="${safeName}">
+                        ${safeName}
                     </h5>
                     <div class="text-its-cyan fw-semibold fs-5 mb-3">
                         ${formatRupiah(product.price)}
                     </div>
                     <button class="btn btn-outline-secondary btn-add-cart w-100 d-flex align-items-center justify-content-center gap-2" 
-                            onclick="event.stopPropagation(); addToCart(${product.id})">
+                            onclick="event.stopPropagation(); addToCart(${productId})">
                         <i class="bi bi-cart-plus"></i>
                         Tambah
                     </button>

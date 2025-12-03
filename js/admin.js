@@ -21,7 +21,7 @@ function handleLogin(e) {
         showToast('Login Admin Berhasil');
         window.location.href = 'admin-dashboard.html';
     } else {
-        alert('Email/Password Salah! (Gunakan: admin@its.ac.id / admin)');
+        alert('Email atau password salah. Silakan coba lagi.');
     }
 }
 
