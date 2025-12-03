@@ -110,18 +110,33 @@ function getRequestMethod(): string {
 }
 
 /**
- * Get JSON body from request
+ * Cached JSON body data
+ * @var array|null
+ */
+$_jsonBodyCache = null;
+
+/**
+ * Get JSON body from request (cached)
  * 
  * @return array Decoded JSON data or empty array
  */
 function getJsonBody(): array {
+    global $_jsonBodyCache;
+    
+    // Return cached result if available
+    if ($_jsonBodyCache !== null) {
+        return $_jsonBodyCache;
+    }
+    
     $input = file_get_contents('php://input');
     if (empty($input)) {
-        return [];
+        $_jsonBodyCache = [];
+        return $_jsonBodyCache;
     }
     
     $data = json_decode($input, true);
-    return is_array($data) ? $data : [];
+    $_jsonBodyCache = is_array($data) ? $data : [];
+    return $_jsonBodyCache;
 }
 
 /**
@@ -142,7 +157,7 @@ function getRequestParam(string $key, $default = null) {
         return $_POST[$key];
     }
     
-    // Check JSON body
+    // Check JSON body (uses cached version)
     $body = getJsonBody();
     if (isset($body[$key])) {
         return $body[$key];

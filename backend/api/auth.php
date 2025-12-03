@@ -138,8 +138,24 @@ function revokeAuthSession(string $token): bool {
  * @return string|null Auth token or null
  */
 function getAuthTokenFromRequest(): ?string {
+    // Get headers using a portable approach
+    $headers = [];
+    
+    // Use getallheaders() if available, otherwise fall back to $_SERVER
+    if (function_exists('getallheaders')) {
+        $headers = getallheaders();
+    } else {
+        // Fallback for environments where getallheaders() is not available
+        foreach ($_SERVER as $key => $value) {
+            if (strpos($key, 'HTTP_') === 0) {
+                $headerName = str_replace('_', '-', substr($key, 5));
+                $headerName = ucwords(strtolower($headerName), '-');
+                $headers[$headerName] = $value;
+            }
+        }
+    }
+    
     // Check Authorization header
-    $headers = getallheaders();
     if (isset($headers['Authorization'])) {
         $auth = $headers['Authorization'];
         if (strpos($auth, 'Bearer ') === 0) {

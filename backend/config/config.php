@@ -64,7 +64,10 @@ define('API_VERSION', 'v1');
 
 /**
  * Allowed origins for CORS
- * In production, set this to your domain
+ * 
+ * SECURITY WARNING: In production, replace '*' with your specific domain(s)
+ * Example: 'https://myits-merchandise.its.ac.id'
+ * Using '*' allows any domain to make API requests
  */
 define('ALLOWED_ORIGINS', '*');
 
@@ -78,8 +81,14 @@ define('CONTENT_TYPE', 'application/json');
 // ============================================
 
 /**
- * Admin credentials (for demonstration purposes)
- * In production, use proper authentication system
+ * Admin credentials
+ * 
+ * SECURITY WARNING: These are default credentials for demonstration only.
+ * In production:
+ * 1. Change these to strong, unique values
+ * 2. Consider using environment variables instead of hardcoded values
+ * 3. Use password hashing (see auth.php for proper implementation)
+ * 4. Implement a proper user management system
  */
 define('ADMIN_EMAIL', 'admin@its.ac.id');
 define('ADMIN_PASSWORD', 'admin');

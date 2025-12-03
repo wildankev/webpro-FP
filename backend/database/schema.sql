@@ -143,11 +143,11 @@ CREATE TABLE IF NOT EXISTS order_items (
 -- ============================================
 -- Insert Default Admin User
 -- ============================================
--- Password is 'admin' (hashed using password_hash)
--- In production, change this to a secure password
+-- Default password is 'admin' (hashed using password_hash with PASSWORD_DEFAULT)
+-- SECURITY WARNING: In production, change this to a strong, unique password
 
 INSERT INTO admin_users (email, password_hash, name) VALUES
-('admin@its.ac.id', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator');
+('admin@its.ac.id', '$2y$10$khtYVHOYteqfT4fwz1BMTO2G7SLq5LgDhG0MIxEB/olkAtTsP2bEK', 'Administrator');
 
 -- ============================================
 -- Insert Default Products

@@ -228,22 +228,18 @@ function updateProduct(int $id, array $data): ?array {
  */
 function deleteProduct(int $id): bool {
     $products = getProducts();
-    $found = false;
     
-    $products = array_filter($products, function($product) use ($id, &$found) {
+    // Find and remove the product by index
+    foreach ($products as $index => $product) {
         if ($product['id'] === $id) {
-            $found = true;
-            return false;
+            // Remove the product and re-index the array
+            unset($products[$index]);
+            JsonDatabase::write(PRODUCTS_FILE, array_values($products));
+            return true;
         }
-        return true;
-    });
-    
-    if ($found) {
-        // Re-index array and save
-        JsonDatabase::write(PRODUCTS_FILE, array_values($products));
     }
     
-    return $found;
+    return false;
 }
 
 // ============================================
