@@ -1,15 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>myITS Merchandise - Official Store</title>
+    
+    <!-- Bootstrap 5.3 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts - Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Mobile Header -->
+    <nav class="navbar navbar-dark mobile-header d-md-none sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">
+                <span class="text-its-blue">my</span>ITS Merch
+            </a>
+            <button class="btn btn-dark border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-label="Toggle navigation">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+        </div>
+    </nav>
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>ITS Merchandise Web Version</title>
-    </head>
+    <!-- Mobile Sidebar Offcanvas -->
+    <div class="offcanvas offcanvas-start bg-dark-custom" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title text-white" id="mobileSidebarLabel">
+                <i class="bi bi-box-seam text-its-blue me-2"></i>
+                <span class="text-its-blue">my</span>ITS
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <ul class="nav flex-column sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link active" href="#" data-view="home" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-house-door me-3"></i>Beranda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" data-view="catalog" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-box-seam me-3"></i>Katalog Produk
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-cart3 me-3"></i>Keranjang
+                        <span class="badge bg-its-blue ms-2 cart-badge" id="mobileCartBadge">0</span>
+                    </a>
+                </li>
+                <hr class="border-secondary my-3">
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" data-view="login" data-bs-dismiss="offcanvas">
+                        <i class="bi bi-shield-lock me-3"></i>Admin Panel
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" onclick="alert('ITS Merchandise © 2025'); return false;">
+                        <i class="bi bi-info-circle me-3"></i>Tentang
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
-  
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar d-none d-md-flex flex-column">
+        <!-- Logo Section -->
+        <div class="sidebar-logo text-center py-4 px-3 border-bottom border-secondary">
+            <i class="bi bi-box-seam text-its-blue fs-1 mb-2 d-block"></i>
+            <h3 class="fw-bold mb-0"><span class="text-its-blue">my</span>ITS</h3>
+            <small class="text-muted">Merchandise</small>
+        </div>
+        
+        <!-- Menu Section -->
+        <div class="sidebar-menu px-3 py-4">
+            <p class="text-muted text-uppercase small fw-medium mb-3 ps-2">Menu</p>
+            <hr class="border-secondary my-2">
+            <ul class="nav flex-column sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link active" href="#" data-view="home">
+                        <i class="bi bi-house-door me-3"></i>Beranda
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" data-view="catalog">
+                        <i class="bi bi-box-seam me-3"></i>Katalog Produk
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" data-bs-toggle="offcanvas" data-bs-target="#cartDrawer">
+                        <i class="bi bi-cart3 me-3"></i>Keranjang
+                        <span class="badge bg-its-blue ms-2 cart-badge" id="desktopCartBadge">0</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Admin Section -->
+        <div class="sidebar-menu px-3 py-3">
+            <p class="text-muted text-uppercase small fw-medium mb-3 ps-2">Admin & Info</p>
+            <ul class="nav flex-column sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" data-view="login" id="adminNavLink">
+                        <i class="bi bi-shield-lock me-3"></i>Admin Panel
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link sidebar-link" href="#" onclick="alert('ITS Merchandise © 2025'); return false;">
+                        <i class="bi bi-info-circle me-3"></i>Tentang
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home View -->
+        <section id="homeView" class="view-section">
+            <!-- Hero Section -->
+            <div class="hero-section rounded-4 p-4 p-md-5 mb-4 position-relative overflow-hidden">
+                <div class="row align-items-center position-relative" style="z-index: 2;">
+                    <div class="col-md-7">
+                        <h1 class="display-5 display-md-4 fw-bold text-white mb-3">
+                            Official Merchandise ITS
+                        </h1>
+                        <p class="text-white-80 fs-5 mb-4" style="line-height: 1.6;">
+                            Dapatkan atribut resmi, perlengkapan kuliah, dan suvenir eksklusif Institut Teknologi Sepuluh Nopember.
+                        </p>
+                        <button class="btn btn-light btn-lg rounded-pill px-4 fw-bold" onclick="navigateTo('catalog')">
+                            Belanja Sekarang
+                        </button>
+                    </div>
+                    <div class="col-md-5 d-none d-md-flex justify-content-center">
+                        <i class="bi bi-bag-heart hero-icon"></i>
+                    </div>
+                </div>
+                <!-- Decorative Circle -->
+                <div class="hero-decoration"></div>
+            </div>
+
+            <!-- Recent Products Section -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold text-white border-start border-4 border-its-blue ps-3 mb-0">
+                    Produk Terbaru
+                </h4>
+                <a href="#" class="text-muted text-decoration-none d-flex align-items-center" onclick="navigateTo('catalog'); return false;">
+                    Lihat Semua <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+            </div>
+
+            <div class="row g-4" id="recentProducts">
+                <!-- Products will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Catalog View -->
+        <section id="catalogView" class="view-section d-none">
+            <h2 class="fw-bold text-white mb-4">Katalog Lengkap</h2>
+            <div class="row g-4" id="allProducts">
+                <!-- Products will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Product Detail View -->
+        <section id="detailView" class="view-section d-none">
+            <button class="btn btn-link text-muted text-decoration-none mb-4 ps-0" onclick="navigateTo('catalog')">
+                <i class="bi bi-arrow-left me-2"></i>Kembali
+            </button>
+            <div id="productDetailContent">
+                <!-- Product detail will be rendered here -->
+            </div>
+        </section>
+
+        <!-- Login View -->
+        <section id="loginView" class="view-section d-none">
+            <div class="row justify-content-center mt-5">
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card bg-dark-card border-secondary rounded-4 shadow-lg">
+                        <div class="card-body p-4 p-md-5">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-person-circle text-its-blue display-4 mb-3 d-block"></i>
+                                <h3 class="fw-bold text-white">Login Admin</h3>
+                            </div>
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small">Email ITS</label>
+                                    <input type="email" class="form-control form-control-lg bg-dark border-secondary text-white" id="loginEmail" placeholder="admin@its.ac.id" required>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label text-muted small">Password</label>
+                                    <input type="password" class="form-control form-control-lg bg-dark border-secondary text-white" id="loginPassword" placeholder="admin" required>
+                                </div>
+                                <button type="submit" class="btn btn-its-blue btn-lg w-100 fw-bold">
+                                    Masuk Dashboard
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Dashboard View -->
+        <section id="adminView" class="view-section d-none">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold text-white mb-0">Dashboard Admin</h2>
+                <button class="btn btn-danger" onclick="handleLogout()">
+                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                </button>
+            </div>
+            
+            <div class="card bg-dark-card border-secondary rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th class="px-4 py-3 text-uppercase small">ID</th>
+                                <th class="px-4 py-3 text-uppercase small">Produk</th>
+                                <th class="px-4 py-3 text-uppercase small">Harga</th>
+                                <th class="px-4 py-3 text-uppercase small">Stok</th>
+                                <th class="px-4 py-3 text-uppercase small">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminProductList">
+                            <!-- Products will be rendered here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Success View -->
+        <section id="successView" class="view-section d-none">
+            <div class="text-center mt-5 pt-5">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-25 mb-4" style="width: 96px; height: 96px;">
+                    <i class="bi bi-check-circle text-success display-4"></i>
+                </div>
+                <h2 class="display-6 fw-bold text-white mb-2">Pesanan Berhasil!</h2>
+                <p class="text-muted mb-4">Terima kasih telah berbelanja di myITS Merchandise.</p>
+                <button class="btn btn-its-blue btn-lg px-5 fw-bold rounded-3" onclick="navigateTo('home')">
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Cart Drawer (Offcanvas) -->
+    <div class="offcanvas offcanvas-end bg-dark-card" tabindex="-1" id="cartDrawer" aria-labelledby="cartDrawerLabel" style="width: 350px;">
+        <div class="offcanvas-header border-bottom border-secondary">
+            <h5 class="offcanvas-title text-white fw-semibold" id="cartDrawerLabel">
+                <i class="bi bi-cart3 me-2"></i>Keranjang Belanja
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body d-flex flex-column p-0">
+            <div class="flex-grow-1 overflow-auto p-3" id="cartItems">
+                <!-- Cart items will be rendered here -->
+            </div>
+            <div class="border-top border-secondary p-3">
+                <div class="d-flex justify-content-between mb-3">
+                    <span class="fs-5 text-white">Total</span>
+                    <span class="fs-5 fw-bold text-its-cyan" id="cartTotal">Rp 0</span>
+                </div>
+                <button class="btn btn-its-blue w-100 py-3 fw-bold" id="checkoutBtn" onclick="handleCheckout()" disabled>
+                    Checkout Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal (Alternative for mobile) -->
+    <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-dark-card border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title text-white" id="productModalLabel">Detail Produk</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="productModalBody">
+                    <!-- Product detail will be rendered here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer">
+        <div id="mainToast" class="toast bg-its-blue border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex align-items-center text-white p-3">
+                <i class="bi bi-check-circle me-2"></i>
+                <div class="toast-body p-0" id="toastMessage">Message</div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3 JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="js/script.js"></script>
+</body>
+</html>
