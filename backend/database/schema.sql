@@ -2,8 +2,10 @@
 -- myITS Merchandise - Database Schema
 -- ============================================
 -- This SQL schema is for MySQL/MariaDB
--- Currently, the application uses JSON file storage,
--- but this schema can be used for MySQL migration
+-- Includes tables for:
+-- - Core application (products, cart, admin, orders)
+-- - Midtrans Payment Gateway integration
+-- - RajaOngkir Shipping API integration
 -- ============================================
 
 -- Create database
@@ -101,13 +103,174 @@ CREATE TABLE IF NOT EXISTS auth_sessions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- Orders Table
+-- MIDTRANS PAYMENT GATEWAY TABLES
 -- ============================================
--- Stores completed orders
+
+-- ============================================
+-- Customers Table
+-- ============================================
+-- Stores customer information for transactions
+
+CREATE TABLE IF NOT EXISTS customers (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    phone VARCHAR(20) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    UNIQUE KEY unique_email (email),
+    INDEX idx_email (email),
+    INDEX idx_phone (phone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Transactions Table (Midtrans)
+-- ============================================
+-- Stores all transaction details from Midtrans payment gateway
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id VARCHAR(50) NOT NULL UNIQUE,
+    customer_id INT UNSIGNED DEFAULT NULL,
+    gross_amount INT UNSIGNED NOT NULL DEFAULT 0,
+    payment_status ENUM('pending', 'paid', 'failed', 'expired', 'cancelled', 'refunded', 'partial_refund') DEFAULT 'pending',
+    payment_type VARCHAR(50) DEFAULT NULL,
+    transaction_id VARCHAR(100) DEFAULT NULL,
+    fraud_status VARCHAR(20) DEFAULT NULL,
+    snap_token VARCHAR(255) DEFAULT NULL,
+    redirect_url VARCHAR(500) DEFAULT NULL,
+    shipping_address TEXT DEFAULT NULL,
+    shipping_cost INT UNSIGNED DEFAULT 0,
+    midtrans_response JSON DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE SET NULL,
+    INDEX idx_order_id (order_id),
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_payment_status (payment_status),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Transaction Items Table
+-- ============================================
+-- Stores items in each transaction
+
+CREATE TABLE IF NOT EXISTS transaction_items (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    transaction_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED DEFAULT NULL,
+    product_name VARCHAR(255) NOT NULL,
+    product_price INT UNSIGNED NOT NULL,
+    quantity INT UNSIGNED NOT NULL DEFAULT 1,
+    subtotal INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+    INDEX idx_transaction_id (transaction_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Webhook Logs Table (Midtrans)
+-- ============================================
+-- Logs all webhook notifications from Midtrans
+
+CREATE TABLE IF NOT EXISTS webhook_logs (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    order_id VARCHAR(50) NOT NULL,
+    transaction_status VARCHAR(50) DEFAULT NULL,
+    payment_type VARCHAR(50) DEFAULT NULL,
+    gross_amount VARCHAR(50) DEFAULT NULL,
+    signature_key VARCHAR(255) DEFAULT NULL,
+    fraud_status VARCHAR(20) DEFAULT NULL,
+    status_code VARCHAR(10) DEFAULT NULL,
+    status_message VARCHAR(255) DEFAULT NULL,
+    raw_payload JSON NOT NULL,
+    is_valid BOOLEAN DEFAULT TRUE,
+    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    INDEX idx_order_id (order_id),
+    INDEX idx_transaction_status (transaction_status),
+    INDEX idx_processed_at (processed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- RAJAONGKIR SHIPPING API TABLES
+-- ============================================
+
+-- ============================================
+-- Provinces Table (RajaOngkir)
+-- ============================================
+-- Stores province data from RajaOngkir to reduce API calls
+
+CREATE TABLE IF NOT EXISTS provinces (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    province_id INT UNSIGNED NOT NULL UNIQUE,
+    province_name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_province_id (province_id),
+    INDEX idx_province_name (province_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Cities Table (RajaOngkir)
+-- ============================================
+-- Stores city data from RajaOngkir to reduce API calls
+
+CREATE TABLE IF NOT EXISTS cities (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    city_id INT UNSIGNED NOT NULL UNIQUE,
+    province_id INT UNSIGNED NOT NULL,
+    province_name VARCHAR(100) NOT NULL,
+    city_type VARCHAR(20) NOT NULL,
+    city_name VARCHAR(100) NOT NULL,
+    postal_code VARCHAR(10) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    INDEX idx_city_id (city_id),
+    INDEX idx_province_id (province_id),
+    INDEX idx_city_name (city_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Shipping Calculations Table (RajaOngkir)
+-- ============================================
+-- Stores shipping cost calculations for caching and history
+
+CREATE TABLE IF NOT EXISTS shipping_calculations (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    origin_city_id INT UNSIGNED NOT NULL,
+    destination_city_id INT UNSIGNED NOT NULL,
+    weight INT UNSIGNED NOT NULL,
+    courier VARCHAR(20) NOT NULL,
+    service VARCHAR(50) NOT NULL,
+    service_description VARCHAR(255) DEFAULT NULL,
+    cost INT UNSIGNED NOT NULL,
+    etd VARCHAR(50) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    
+    INDEX idx_origin (origin_city_id),
+    INDEX idx_destination (destination_city_id),
+    INDEX idx_courier (courier),
+    INDEX idx_expires (expires_at),
+    INDEX idx_route (origin_city_id, destination_city_id, weight, courier)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- Legacy Orders Table (kept for backward compatibility)
+-- ============================================
+-- Stores completed orders (simple version)
 
 CREATE TABLE IF NOT EXISTS orders (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    order_number VARCHAR(20) NOT NULL UNIQUE,
+    order_number VARCHAR(50) NOT NULL UNIQUE,
     customer_name VARCHAR(255) DEFAULT NULL,
     customer_email VARCHAR(255) DEFAULT NULL,
     customer_phone VARCHAR(20) DEFAULT NULL,
@@ -130,14 +293,15 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS order_items (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     order_id INT UNSIGNED NOT NULL,
-    product_id INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED DEFAULT NULL,
     product_name VARCHAR(255) NOT NULL,
     product_price INT UNSIGNED NOT NULL,
     quantity INT UNSIGNED NOT NULL DEFAULT 1,
     subtotal INT UNSIGNED NOT NULL DEFAULT 0,
     
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+    INDEX idx_order_id (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================

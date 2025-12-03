@@ -3,6 +3,8 @@
  * myITS Merchandise - Payment API (Midtrans Integration)
  * 
  * Handles payment processing using Midtrans Payment Gateway.
+ * Supports both JSON file storage and MySQL database.
+ * 
  * Provides endpoints for:
  * - Creating payment transactions (Snap token generation)
  * - Checking transaction status
@@ -25,8 +27,13 @@ if (!defined('MYITS_BACKEND')) {
     exit('Direct access not allowed');
 }
 
+// Load PaymentDatabase if MySQL is enabled
+if (DB_TYPE === 'mysql') {
+    require_once __DIR__ . '/../includes/PaymentDatabase.php';
+}
+
 // ============================================
-// Orders File Path
+// Orders File Path (for JSON storage fallback)
 // ============================================
 
 define('PAYMENT_ORDERS_FILE', DATA_PATH . '/orders.json');
@@ -108,16 +115,19 @@ function generateOrderId(): string {
 }
 
 /**
- * Get all orders from storage
+ * Get all orders from storage (supports both JSON and MySQL)
  * 
  * @return array Array of orders
  */
 function getOrders(): array {
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        return PaymentDatabase::getTransactions();
+    }
     return JsonDatabase::read(PAYMENT_ORDERS_FILE);
 }
 
 /**
- * Save all orders to storage
+ * Save all orders to storage (JSON only - MySQL uses individual saves)
  * 
  * @param array $orders Orders data
  * @return bool Success status
@@ -127,12 +137,41 @@ function saveOrders(array $orders): bool {
 }
 
 /**
- * Get order by order ID
+ * Get order by order ID (supports both JSON and MySQL)
  * 
  * @param string $orderId Order ID
  * @return array|null Order data or null if not found
  */
 function getOrderById(string $orderId): ?array {
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        $transaction = PaymentDatabase::getTransactionByOrderId($orderId);
+        if ($transaction) {
+            // Map MySQL fields to JSON format for compatibility
+            return [
+                'order_id' => $transaction['order_id'],
+                'gross_amount' => (int) $transaction['gross_amount'],
+                'items' => $transaction['items'] ?? [],
+                'customer' => [
+                    'name' => $transaction['customer_name'] ?? '',
+                    'email' => $transaction['customer_email'] ?? '',
+                    'phone' => $transaction['customer_phone'] ?? ''
+                ],
+                'shipping_address' => $transaction['shipping_address'],
+                'shipping_cost' => (int) ($transaction['shipping_cost'] ?? 0),
+                'payment_status' => $transaction['payment_status'],
+                'payment_type' => $transaction['payment_type'],
+                'transaction_id' => $transaction['transaction_id'],
+                'fraud_status' => $transaction['fraud_status'],
+                'snap_token' => $transaction['snap_token'],
+                'redirect_url' => $transaction['redirect_url'],
+                'created_at' => $transaction['created_at'],
+                'updated_at' => $transaction['updated_at'],
+                'midtrans_response' => $transaction['midtrans_response']
+            ];
+        }
+        return null;
+    }
+    
     $orders = getOrders();
     
     foreach ($orders as $order) {
@@ -145,12 +184,46 @@ function getOrderById(string $orderId): ?array {
 }
 
 /**
- * Save or update an order
+ * Save or update an order (supports both JSON and MySQL)
  * 
  * @param array $order Order data
  * @return bool Success status
  */
 function saveOrder(array $order): bool {
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        try {
+            // Create or get customer
+            $customerId = null;
+            if (!empty($order['customer']['email'])) {
+                $customerId = PaymentDatabase::createOrGetCustomer(
+                    $order['customer']['name'] ?? 'Customer',
+                    $order['customer']['email'],
+                    $order['customer']['phone'] ?? null
+                );
+            }
+            
+            // Create transaction
+            PaymentDatabase::createTransaction([
+                'order_id' => $order['order_id'],
+                'customer_id' => $customerId,
+                'gross_amount' => $order['gross_amount'],
+                'items' => $order['items'] ?? [],
+                'shipping_address' => $order['shipping_address'] ?? null,
+                'shipping_cost' => $order['shipping_cost'] ?? 0,
+                'snap_token' => $order['snap_token'] ?? null,
+                'redirect_url' => $order['redirect_url'] ?? null
+            ]);
+            
+            return true;
+        } catch (Exception $e) {
+            if (DEBUG_MODE) {
+                error_log('PaymentDatabase error: ' . $e->getMessage());
+            }
+            return false;
+        }
+    }
+    
+    // JSON storage fallback
     $orders = getOrders();
     $found = false;
     
@@ -170,7 +243,7 @@ function saveOrder(array $order): bool {
 }
 
 /**
- * Update order status
+ * Update order status (supports both JSON and MySQL)
  * 
  * @param string $orderId Order ID
  * @param string $status New status
@@ -178,6 +251,18 @@ function saveOrder(array $order): bool {
  * @return bool Success status
  */
 function updateOrderStatus(string $orderId, string $status, array $additionalData = []): bool {
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        try {
+            return PaymentDatabase::updateTransactionStatus($orderId, $status, $additionalData);
+        } catch (Exception $e) {
+            if (DEBUG_MODE) {
+                error_log('PaymentDatabase error: ' . $e->getMessage());
+            }
+            return false;
+        }
+    }
+    
+    // JSON storage fallback
     $orders = getOrders();
     
     foreach ($orders as $index => $order) {
@@ -505,16 +590,35 @@ function handleWebhookNotification(array $notification): array {
     $signatureKey = $notification['signature_key'] ?? null;
     
     // Verify signature for security
+    $isValid = true;
     if ($signatureKey !== null && $grossAmount !== null && $statusCode !== null) {
         $expectedSignature = hash('sha512', 
             $orderId . $statusCode . $grossAmount . MIDTRANS_SERVER_KEY
         );
         
         if ($signatureKey !== $expectedSignature) {
+            $isValid = false;
+            
+            // Log invalid webhook to MySQL if enabled
+            if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+                PaymentDatabase::logWebhook($notification, false);
+            }
+            
             return [
                 'success' => false,
                 'error' => 'Invalid signature'
             ];
+        }
+    }
+    
+    // Log webhook to MySQL if enabled
+    if (DB_TYPE === 'mysql' && isMySQLEnabled()) {
+        try {
+            PaymentDatabase::logWebhook($notification, $isValid);
+        } catch (Exception $e) {
+            if (DEBUG_MODE) {
+                error_log('Webhook log error: ' . $e->getMessage());
+            }
         }
     }
     

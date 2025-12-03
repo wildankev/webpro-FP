@@ -12,7 +12,8 @@ Web application untuk toko merchandise resmi Institut Teknologi Sepuluh Nopember
 
 ### Backend
 - **PHP 8.x** - Native PHP backend
-- **JSON File Storage** - Simple file-based data storage (can be extended to MySQL)
+- **JSON File Storage** - Simple file-based data storage (default)
+- **MySQL Database** - Optional database integration using PDO
 - **RESTful API** - Clean API architecture for server-side operations
 
 ## Menjalankan Aplikasi
@@ -34,6 +35,15 @@ php -S localhost:8080
 
 # Akses frontend di http://localhost:8080
 # Akses API di http://localhost:8080/backend/api/
+```
+
+### Dengan MySQL Database
+```bash
+# 1. Setup database
+mysql -u root -p < backend/database/schema.sql
+
+# 2. Jalankan dengan environment variable
+DB_TYPE=mysql DB_HOST=localhost DB_NAME=myits_merchandise DB_USER=root DB_PASS=yourpassword php -S localhost:8080
 ```
 
 ## Struktur Project
@@ -66,12 +76,16 @@ php -S localhost:8080
 │   │   └── shipping.php    # Shipping API (RajaOngkir integration)
 │   ├── config/
 │   │   ├── config.php      # Application configuration
-│   │   ├── database.php    # Database configuration
+│   │   ├── database.php    # Database configuration (JSON & MySQL)
 │   │   └── api_keys.php    # External API keys (Midtrans, RajaOngkir)
 │   ├── includes/
-│   │   └── helpers.php     # Helper functions
+│   │   ├── helpers.php     # Helper functions
+│   │   ├── PaymentDatabase.php  # MySQL operations for Midtrans
+│   │   └── ShippingDatabase.php # MySQL operations for RajaOngkir
 │   ├── database/
-│   │   └── schema.sql      # MySQL schema (for future use)
+│   │   └── schema.sql      # MySQL schema for all tables
+│   ├── examples/
+│   │   └── mysql_integration_examples.php  # Usage examples
 │   └── data/
 │       └── products.json   # Product data storage
 ├── .gitignore              # Git ignore rules
@@ -257,6 +271,80 @@ curl http://localhost:8080/backend/api/shipping/couriers
    define('RAJAONGKIR_API_KEY', 'your-api-key');
    define('RAJAONGKIR_ACCOUNT_TYPE', 'starter'); // 'starter', 'basic', or 'pro'
    ```
+
+## MySQL Database Integration
+
+The application supports both JSON file storage (default) and MySQL database. MySQL integration provides:
+
+### For Midtrans Payment Gateway:
+- **Customer Management**: Store customer information (name, email, phone)
+- **Transaction Storage**: Store order ID, amount, payment status, and timestamps
+- **Transaction Items**: Store individual items for each transaction
+- **Webhook Logging**: Log all Midtrans webhook notifications for audit
+
+### For RajaOngkir Shipping:
+- **Province Data**: Cache province data to reduce API calls
+- **City Data**: Cache city data with search functionality
+- **Shipping Calculations**: Cache shipping cost results for performance
+
+### Setting Up MySQL
+
+1. **Create Database and Tables:**
+   ```bash
+   mysql -u root -p < backend/database/schema.sql
+   ```
+
+2. **Configure Environment Variables:**
+   ```bash
+   export DB_TYPE=mysql
+   export DB_HOST=localhost
+   export DB_PORT=3306
+   export DB_NAME=myits_merchandise
+   export DB_USER=your_username
+   export DB_PASS=your_password
+   ```
+
+3. **Run with MySQL:**
+   ```bash
+   DB_TYPE=mysql php -S localhost:8080
+   ```
+
+### Database Tables
+
+| Table | Description |
+|-------|-------------|
+| `customers` | Customer information for transactions |
+| `transactions` | Transaction details from Midtrans |
+| `transaction_items` | Items in each transaction |
+| `webhook_logs` | Midtrans webhook notification logs |
+| `provinces` | RajaOngkir province data cache |
+| `cities` | RajaOngkir city data cache |
+| `shipping_calculations` | Shipping cost calculation cache |
+| `products` | Merchandise products |
+| `cart_sessions` | Shopping cart sessions |
+| `cart_items` | Items in shopping carts |
+| `admin_users` | Admin user accounts |
+| `auth_sessions` | Authentication sessions |
+| `orders` | Legacy orders table |
+| `order_items` | Items in legacy orders |
+
+### Usage Examples
+
+See `backend/examples/mysql_integration_examples.php` for comprehensive examples of:
+- Database connection testing
+- Customer CRUD operations
+- Transaction management
+- Webhook logging
+- Province/city caching
+- Shipping calculation caching
+
+```bash
+# Run examples via CLI
+php backend/examples/mysql_integration_examples.php
+
+# Or via browser
+# http://localhost:8080/backend/examples/mysql_integration_examples.php
+```
 
 ## Branding
 
