@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --its-blue: #007BC0;
+  --its-blue-dark: #005A8D;
+  --its-cyan: #00B5E2;
+  --its-gold: #FFBD07;
+  
+  /* ShadCN Variables */
+  --background: 0 0% 7%; /* #121212 */
+  --foreground: 210 40% 98%;
+
+  --card: 0 0% 12%; /* #1E1E1E */
+  --card-foreground: 210 40% 98%;
+
+  --popover: 0 0% 9%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 201 100% 37%; /* #007BC0 */
+  --primary-foreground: 210 40% 98%;
+
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 212.7 26.8% 83.9%;
+  
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #121212;
+    color: white;
+  }
+}
+
+@layer components {
+  /* Layout Helpers */
+  .main-content {
+    margin-left: 256px; /* Matches Sidebar Width */
+    padding: 2rem;
+    transition: margin-left 0.3s ease;
+  }
+
+  @media (max-width: 768px) {
+    .main-content { margin-left: 0; padding: 1rem; }
+  }
+
+  /* Custom ITS Card */
+  .card-product {
+    background-color: #1E1E1E;
+    border: 1px solid #333;
+    border-radius: 16px;
+    transition: transform 0.2s, border-color 0.2s;
+    height: 100%;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .card-product:hover {
+    transform: translateY(-5px);
+    border-color: #555;
+  }
+
+  .badge-stock {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 123, 192, 0.9);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 10;
+  }
+}
