@@ -1,0 +1,432 @@
+/**
+ * myITS Merchandise - Custom Styles
+ * Minimal CSS to complement Bootstrap 5.3
+ * Primary Color: #007BC0 (ITS Blue)
+ */
+
+/* ========================================
+   CSS Variables & Root Styles
+   ======================================== */
+:root {
+    --its-blue: #007BC0;
+    --its-blue-dark: #005A8D;
+    --its-cyan: #00B5E2;
+    --its-gold: #FFBD07;
+    --bg-dark: #121212;
+    --bg-card: #1E1E1E;
+    --bg-card-hover: #252525;
+    --border-color: #333333;
+    --text-muted-custom: #808191;
+}
+
+/* ========================================
+   Base Styles
+   ======================================== */
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    min-height: 100vh;
+}
+
+/* ========================================
+   Color Utilities
+   ======================================== */
+.text-its-blue {
+    color: var(--its-blue) !important;
+}
+
+.text-its-cyan {
+    color: var(--its-cyan) !important;
+}
+
+.text-white-80 {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.bg-its-blue {
+    background-color: var(--its-blue) !important;
+}
+
+.bg-dark-custom {
+    background-color: var(--bg-dark) !important;
+}
+
+.bg-dark-card {
+    background-color: var(--bg-card) !important;
+}
+
+.border-its-blue {
+    border-color: var(--its-blue) !important;
+}
+
+/* ========================================
+   Button Styles
+   ======================================== */
+.btn-its-blue {
+    background-color: var(--its-blue);
+    border-color: var(--its-blue);
+    color: #ffffff;
+}
+
+.btn-its-blue:hover,
+.btn-its-blue:focus {
+    background-color: var(--its-blue-dark);
+    border-color: var(--its-blue-dark);
+    color: #ffffff;
+}
+
+.btn-its-blue:disabled {
+    background-color: var(--its-blue);
+    border-color: var(--its-blue);
+    opacity: 0.5;
+}
+
+/* ========================================
+   Mobile Header
+   ======================================== */
+.mobile-header {
+    background-color: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ========================================
+   Sidebar Styles
+   ======================================== */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 256px;
+    height: 100vh;
+    background-color: #141414;
+    border-right: 1px solid rgba(41, 41, 41, 0.5);
+    overflow-y: auto;
+    z-index: 1040;
+}
+
+.sidebar-logo h3 {
+    font-size: 1.125rem;
+    line-height: 1;
+}
+
+.sidebar-nav .nav-link {
+    color: var(--text-muted-custom);
+    padding: 0.875rem 1.25rem;
+    border-radius: 0.75rem;
+    transition: all 0.15s ease-in-out;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: #292929;
+    color: #e5e5e5;
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--its-blue);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 123, 192, 0.2);
+}
+
+.sidebar-nav .nav-link.active .cart-badge {
+    background-color: #ffffff !important;
+    color: var(--its-blue) !important;
+}
+
+/* ========================================
+   Main Content
+   ======================================== */
+.main-content {
+    margin-left: 256px;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+@media (max-width: 767.98px) {
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+    }
+}
+
+/* ========================================
+   Hero Section
+   ======================================== */
+.hero-section {
+    background: linear-gradient(135deg, var(--its-blue) 0%, var(--its-cyan) 100%);
+    position: relative;
+}
+
+.hero-icon {
+    font-size: 12rem;
+    color: rgba(255, 255, 255, 0.8);
+    transform: rotate(-10deg);
+}
+
+.hero-decoration {
+    position: absolute;
+    right: -5rem;
+    bottom: -10rem;
+    width: 24rem;
+    height: 24rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    filter: blur(64px);
+}
+
+/* ========================================
+   Product Card
+   ======================================== */
+.product-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    border-color: #555555;
+}
+
+.product-card-img {
+    height: 200px;
+    object-fit: cover;
+    width: 100%;
+    background-color: #333;
+}
+
+.product-card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.product-card .stock-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 123, 192, 0.9);
+    color: #fff;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 10;
+}
+
+.product-card .btn-add-cart {
+    margin-top: auto;
+    border-color: #555;
+    color: #ccc;
+    transition: all 0.15s ease;
+}
+
+.product-card .btn-add-cart:hover {
+    background-color: #ffffff;
+    border-color: #ffffff;
+    color: #121212;
+}
+
+/* ========================================
+   Cart Item
+   ======================================== */
+.cart-item {
+    display: flex;
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.cart-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.cart-item-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 0.5rem;
+    object-fit: cover;
+    background-color: #333;
+}
+
+.cart-item-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.cart-item-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cart-item-price {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.cart-item-total {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--its-cyan);
+}
+
+.cart-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    padding: 2rem;
+}
+
+.cart-empty-icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+/* ========================================
+   Product Detail
+   ======================================== */
+.product-detail-img {
+    width: 100%;
+    height: auto;
+    border-radius: 0.75rem;
+}
+
+.product-detail-info-box {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+}
+
+/* ========================================
+   Admin Table
+   ======================================== */
+.table-dark {
+    --bs-table-bg: var(--bg-card);
+    --bs-table-border-color: var(--border-color);
+    --bs-table-hover-bg: var(--bg-card-hover);
+}
+
+.table-secondary {
+    --bs-table-bg: #252525;
+    --bs-table-color: #e5e5e5;
+}
+
+/* ========================================
+   Form Controls (Dark Theme)
+   ======================================== */
+.form-control.bg-dark {
+    background-color: #000000 !important;
+}
+
+.form-control.bg-dark:focus {
+    border-color: var(--its-blue);
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 192, 0.25);
+}
+
+.form-control.bg-dark::placeholder {
+    color: #666;
+}
+
+/* ========================================
+   Toast Customization
+   ======================================== */
+.toast.bg-its-blue {
+    background-color: var(--its-blue) !important;
+}
+
+/* ========================================
+   Offcanvas Dark Theme
+   ======================================== */
+.offcanvas.bg-dark-card {
+    background-color: var(--bg-card) !important;
+}
+
+/* ========================================
+   View Transitions
+   ======================================== */
+.view-section {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================
+   Scrollbar Styling
+   ======================================== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* ========================================
+   Misc Utilities
+   ======================================== */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Remove button focus outline for cleaner look */
+.btn:focus {
+    box-shadow: none;
+}
+
+/* Fix for Bootstrap modal backdrop on dark theme */
+.modal-backdrop {
+    background-color: rgba(0, 0, 0, 0.7);
+}
