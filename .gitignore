@@ -31,6 +31,10 @@ backend/data/carts.json
 backend/data/auth_sessions.json
 backend/data/orders.json
 
+# Shipping API cache files
+backend/data/provinces_cache.json
+backend/data/cities_cache.json
+
 # ============================================
 # Operating System
 # ============================================
