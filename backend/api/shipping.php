@@ -291,7 +291,7 @@ function getCityById(int $cityId): ?array {
     }
     
     foreach ($cities['data'] as $city) {
-        if ($city['city_id'] == $cityId) {
+        if ((int)$city['city_id'] === $cityId) {
             return $city;
         }
     }

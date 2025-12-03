@@ -27,9 +27,10 @@ if (!defined('MYITS_BACKEND')) {
 
 /**
  * Midtrans Environment
- * 'sandbox' for testing, 'production' for live transactions
+ * Set to true for production, false for sandbox (testing)
+ * Recommended: Use environment variable MIDTRANS_IS_PRODUCTION=true for production
  */
-define('MIDTRANS_IS_PRODUCTION', false);
+define('MIDTRANS_IS_PRODUCTION', filter_var(getenv('MIDTRANS_IS_PRODUCTION'), FILTER_VALIDATE_BOOLEAN));
 
 /**
  * Midtrans Server Key
@@ -117,10 +118,18 @@ define('DEFAULT_ORIGIN_CITY', 444);
  * - Basic: jne, pos, tiki
  * - Pro: jne, pos, tiki, rpx, pandu, wahana, sicepat, jnt, pahala, sap, jet, indah, dse, slis, first, ncs, star, ninja, lion, idl, rex, ide, sentral
  */
-$RAJAONGKIR_COURIERS = [
-    'starter' => ['jne'],
-    'basic' => ['jne', 'pos', 'tiki'],
-    'pro' => ['jne', 'pos', 'tiki', 'rpx', 'sicepat', 'jnt', 'ninja', 'lion']
-];
+define('RAJAONGKIR_COURIERS_STARTER', ['jne']);
+define('RAJAONGKIR_COURIERS_BASIC', ['jne', 'pos', 'tiki']);
+define('RAJAONGKIR_COURIERS_PRO', ['jne', 'pos', 'tiki', 'rpx', 'sicepat', 'jnt', 'ninja', 'lion']);
 
-define('RAJAONGKIR_AVAILABLE_COURIERS', $RAJAONGKIR_COURIERS[RAJAONGKIR_ACCOUNT_TYPE] ?? ['jne']);
+// Set available couriers based on account type
+switch (RAJAONGKIR_ACCOUNT_TYPE) {
+    case 'pro':
+        define('RAJAONGKIR_AVAILABLE_COURIERS', RAJAONGKIR_COURIERS_PRO);
+        break;
+    case 'basic':
+        define('RAJAONGKIR_AVAILABLE_COURIERS', RAJAONGKIR_COURIERS_BASIC);
+        break;
+    default:
+        define('RAJAONGKIR_AVAILABLE_COURIERS', RAJAONGKIR_COURIERS_STARTER);
+}

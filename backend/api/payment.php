@@ -255,6 +255,7 @@ function createPayment(array $data): array {
     
     foreach ($data['cart_items'] as $item) {
         $price = validateInt($item['price'], 0) ?: 0;
+        // Support both 'qty' and 'quantity' field names for flexibility
         $qty = validateInt($item['qty'] ?? $item['quantity'] ?? 1, 1) ?: 1;
         $itemTotal = $price * $qty;
         $grossAmount += $itemTotal;
@@ -279,10 +280,16 @@ function createPayment(array $data): array {
         ];
     }
     
+    // Validate customer email - return error if invalid
+    $customerEmail = filter_var($data['customer']['email'] ?? '', FILTER_VALIDATE_EMAIL);
+    if (!$customerEmail) {
+        return ['success' => false, 'error' => 'Valid customer email is required'];
+    }
+    
     // Prepare customer details
     $customerDetails = [
         'first_name' => sanitizeString($data['customer']['name'] ?? 'Customer'),
-        'email' => filter_var($data['customer']['email'] ?? '', FILTER_VALIDATE_EMAIL) ?: 'customer@example.com',
+        'email' => $customerEmail,
         'phone' => preg_replace('/[^0-9+]/', '', $data['customer']['phone'] ?? '')
     ];
     
@@ -299,6 +306,7 @@ function createPayment(array $data): array {
     }
     
     // Prepare Snap API request
+    $baseUrl = $_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:8080';
     $snapPayload = [
         'transaction_details' => [
             'order_id' => $orderId,
@@ -307,7 +315,7 @@ function createPayment(array $data): array {
         'item_details' => $itemDetails,
         'customer_details' => $customerDetails,
         'callbacks' => [
-            'finish' => $_SERVER['HTTP_ORIGIN'] ?? 'http://localhost:8080' . '/checkout-success.html'
+            'finish' => $baseUrl . '/checkout-success.html'
         ]
     ];
     
